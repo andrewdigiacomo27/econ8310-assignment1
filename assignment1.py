@@ -1,26 +1,42 @@
 import pandas as pd
 import numpy as np
-from prophet import Prophet
+from statsmodels.tsa.statespace.varmax import VARMAX
 
-
+# Load data
 trainData = pd.read_csv("assignment_data_train.csv")
 testData = pd.read_csv("assignment_data_test.csv")
 
 trainData['Timestamp'] = pd.to_datetime(trainData['Timestamp'])
-trainData1 = trainData[['Timestamp', 'trips']]
+testData['Timestamp'] = pd.to_datetime(testData['Timestamp'])
 
-trainData1 = pd.DataFrame(trainData1.values, columns = ['ds', 'y'])
+# Endogenous variables (VAR part)
+endog = trainData[['trips', 'hour']]
 
-model = Prophet(changepoint_prior_scale=0.5, daily_seasonality=True, weekly_seasonality=True)
-model.fit(trainData1)
+# Exogenous variables (X part)
+exog = trainData[['month', 'day']]
 
-future = model.make_future_dataframe(periods= 744, freq= 'h')
-pred = model.predict(future)
+# --------------------
+# Define model
+# --------------------
+model = VARMAX(
+    endog,
+    exog=exog,
+    order=(1, 1),      # VARMA(1,1)
+    trend='c'
+)
 
-pred = pred['yhat'][-744:]
-pred = np.array(pred)
+# Fit model
+modelFit = model.fit(disp=False)
 
+# --------------------
+# Forecast January
+# --------------------
+exog_future = testData[['month', 'day']]
 
+forecast = modelFit.forecast(
+    steps=744,
+    exog=exog_future
+)
 
-
-
+# Extract trips forecast only
+pred = forecast['trips'].values
