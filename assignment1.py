@@ -1,26 +1,24 @@
 import pandas as pd
-from statsmodels.tsa.api import VAR
-import plotly.express as px
 import numpy as np
+from prophet import Prophet
 
 
 trainData = pd.read_csv("assignment_data_train.csv")
 testData = pd.read_csv("assignment_data_test.csv")
 
 trainData['Timestamp'] = pd.to_datetime(trainData['Timestamp'])
-trainData.set_index(pd.DatetimeIndex(trainData['Timestamp']), inplace=True)
+trainData1 = trainData[['Timestamp', 'trips']]
 
-varData = trainData[['trips','hour']].dropna()[:-50]
-model = VAR(varData)
+trainData1 = pd.DataFrame(trainData1.values, columns = ['ds', 'y'])
 
-lag = model.select_order()
-print(lag.summary())
+model = Prophet(changepoint_prior_scale=0.5, daily_seasonality=True, weekly_seasonality=True)
+model.fit(trainData1)
 
-modelFit = model.fit(lag.aic)
+future = model.make_future_dataframe(periods= 744, freq= 'h')
+pred = model.predict(future)
 
-nPeriods = varData.values[-modelFit.k_ar:]
-pred = modelFit.forecast(nPeriods, steps = 31*24)
-pred = pred[:,0]
+pred = pred['yhat'][-744:]
+pred = np.array(pred)
 
 
 
