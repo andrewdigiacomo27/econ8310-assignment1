@@ -28,7 +28,7 @@ xTest = testData[['year', 'month', 'day', 'hour']]
 model = LinearGAM(s(0) + s(1) + s(2) + s(3))
 modelFit = model.gridsearch(np.asarray(x), y)
 
-predict = modelFit.predict(xTest)
+pred = modelFit.predict(xTest)
 
 
 # rmse = np.sqrt(np.mean((pred - testData['trips'].values)**2))
