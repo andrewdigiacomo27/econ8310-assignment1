@@ -12,10 +12,12 @@ trainData['Timestamp'] = pd.to_datetime(trainData['Timestamp'])
 trainTrips = trainData['trips']
 
 #maybe remove seasonality is causing error? test RMSE
-model = ExponentialSmoothing(trainTrips, trend='add')
+model = ExponentialSmoothing(trainTrips, trend = 'add', seasonal = 'add', seasonal_periods = 24*7, damped_trend=True)
 
 modelFit = model.fit(optimized = True)
 
 forecast1 = len(testData)
 pred = modelFit.forecast(forecast1)
 pred = np.array(pred)
+
+
